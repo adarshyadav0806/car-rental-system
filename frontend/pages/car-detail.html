@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Details — DriveLuxe</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .detail-layout {
+      max-width: 1200px; margin: 0 auto;
+      padding: calc(var(--header-h) + 2rem) 2rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 1024px) { .detail-layout { grid-template-columns: 1fr; } }
+
+    .car-gallery { border-radius: var(--radius-xl); overflow: hidden; background: var(--bg-card); border: 1px solid var(--border); }
+    .gallery-main { height: 420px; overflow: hidden; position: relative; }
+    .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-thumbs { display: flex; gap: 0.5rem; padding: 0.75rem; overflow-x: auto; }
+    .gallery-thumb { width: 80px; height: 60px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: var(--transition); }
+    .gallery-thumb.active { border-color: var(--accent); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .features-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .feature-tag {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.9rem; border-radius: 100px;
+      background: var(--bg-hover); border: 1px solid var(--border);
+      font-size: 0.8rem; color: var(--text-secondary);
+    }
+
+    .booking-sidebar {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 1.75rem;
+      position: sticky; top: calc(var(--header-h) + 1.5rem);
+    }
+
+    .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .spec-item {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 0.75rem 1rem;
+    }
+    .spec-key { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .spec-val { font-size: 0.95rem; font-weight: 600; margin-top: 0.2rem; }
+
+    .cost-breakdown { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 1rem; margin-top: 1rem; }
+    .cost-row { display: flex; justify-content: space-between; font-size: 0.875rem; padding: 0.3rem 0; }
+    .cost-row.total { border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 0.75rem; font-weight: 700; font-size: 1rem; color: var(--accent); }
+
+    .review-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+
+  <div class="detail-layout">
+    <!-- LEFT COLUMN -->
+    <div>
+      <!-- Gallery -->
+      <div class="car-gallery" id="gallery">
+        <div class="gallery-main">
+          <img id="mainImage" src="" alt="Car" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80'">
+        </div>
+        <div class="gallery-thumbs" id="thumbs"></div>
+      </div>
+
+      <!-- Info -->
+      <div style="margin-top:2rem;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+          <div>
+            <div style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.4rem;" id="carBrand">—</div>
+            <h1 style="font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);letter-spacing:0.04em;" id="carName">Loading...</h1>
+            <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;">
+              <div id="carRating"></div>
+              <span style="font-size:0.82rem;color:var(--text-muted);" id="carReviewCount"></span>
+              <span id="carAvailBadge"></span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--font-mono);font-size:2.5rem;color:var(--accent);" id="carPrice">—</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">per day</div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:2rem;" id="carDesc"></p>
+
+        <!-- Specs -->
+        <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:1rem;">Specifications</h3>
+        <div class="spec-grid" id="specGrid"></div>
+
+        <!-- Features -->
+        <div style="margin-top:2rem;">
+          <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:1rem;">Features & Amenities</h3>
+          <div class="features-list" id="featuresList"></div>
+        </div>
+
+        <!-- Availability Calendar -->
+        <div style="margin-top:2.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h3 style="font-family:var(--font-display);font-size:1.3rem;">Availability Calendar</h3>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)">‹</button>
+              <span id="calMonthLabel" style="font-size:0.9rem;min-width:120px;text-align:center;font-weight:600;"></span>
+              <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)">›</button>
+            </div>
+          </div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;">
+            <div class="calendar" id="calendar"></div>
+            <div style="display:flex;gap:1.5rem;margin-top:1rem;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-muted);">
+                <div style="width:14px;height:14px;border-radius:3px;background:rgba(16,185,129,0.15);border:1px solid var(--success);"></div> Available
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-muted);">
+                <div style="width:14px;height:14px;border-radius:3px;background:rgba(239,68,68,0.15);border:1px solid var(--danger);"></div> Booked
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews -->
+        <div style="margin-top:2.5rem;">
+          <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:1.25rem;">Customer Reviews</h3>
+          <div id="reviewsContainer">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKING SIDEBAR -->
+    <div class="booking-sidebar" id="bookingSidebar">
+      <div style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:1.5rem;">Book This Car</div>
+
+      <div class="form-group">
+        <label class="form-label">Pickup Date</label>
+        <input type="date" id="bookStart" class="form-control" oninput="recalcCost()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Return Date</label>
+        <input type="date" id="bookEnd" class="form-control" oninput="recalcCost()">
+      </div>
+
+      <div class="cost-breakdown" id="costBreakdown" style="display:none;">
+        <div class="cost-row">
+          <span id="daysLabel">— days</span>
+          <span id="baseCost">—</span>
+        </div>
+        <div class="cost-row">
+          <span>Insurance & fees</span>
+          <span>Included</span>
+        </div>
+        <div class="cost-row total">
+          <span>Total</span>
+          <span id="totalCost">—</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" id="bookBtn" onclick="goBook()" style="margin-top:1.25rem;" disabled>
+        Select Dates to Book
+      </button>
+
+      <div style="margin-top:1rem;padding:1rem;background:var(--bg-secondary);border-radius:var(--radius-sm);">
+        <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.7;">
+          ✓ Free cancellation up to 24h before<br>
+          ✓ No hidden fees<br>
+          ✓ Instant confirmation
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    document.getElementById('navbar-root').innerHTML = renderNavbar('cars');
+
+    const carId = new URLSearchParams(window.location.search).get('id');
+    if (!carId) window.location.href = 'cars.html';
+
+    let car = null;
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth() + 1;
+    let bookedDates = [];
+
+    // Set default dates
+    document.getElementById('bookStart').value = todayStr();
+    document.getElementById('bookStart').min = todayStr();
+    document.getElementById('bookEnd').value = tomorrowStr();
+    document.getElementById('bookEnd').min = tomorrowStr();
+
+    async function loadCar() {
+      try {
+        const data = await API.getCar(carId);
+        car = data.car;
+        document.title = `${car.name} — DriveLuxe`;
+        renderCarDetail();
+        loadAvailability();
+        loadReviews();
+      } catch (err) {
+        Toast.error('Failed to load car', err.message);
+      }
+    }
+
+    function renderCarDetail() {
+      const images = car.images.length > 0 ? car.images.map(i => `http://localhost:5000${i}`) :
+        ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80'];
+
+      document.getElementById('mainImage').src = images[0];
+
+      const thumbsEl = document.getElementById('thumbs');
+      thumbsEl.innerHTML = images.map((img, i) => `
+        <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="setMainImage('${img}', this)">
+          <img src="${img}" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=200&q=60'">
+        </div>
+      `).join('');
+
+      document.getElementById('carBrand').textContent = `${car.brand} · ${car.year}`;
+      document.getElementById('carName').textContent = car.name;
+      document.getElementById('carPrice').textContent = formatCurrency(car.pricePerDay);
+      document.getElementById('carDesc').textContent = car.description || 'Premium vehicle in excellent condition.';
+
+      document.getElementById('carRating').innerHTML = renderStars(Math.round(car.rating));
+      document.getElementById('carReviewCount').textContent = car.numReviews ? `${car.numReviews} reviews` : 'No reviews yet';
+      document.getElementById('carAvailBadge').innerHTML = car.isAvailable
+        ? '<span class="badge badge-success">Available</span>'
+        : '<span class="badge badge-danger">Unavailable</span>';
+
+      const specs = [
+        { key: 'Type', val: car.type },
+        { key: 'Transmission', val: car.transmission },
+        { key: 'Fuel', val: car.fuelType },
+        { key: 'Seats', val: car.seats },
+        { key: 'Mileage', val: car.mileage ? `${car.mileage} km/l` : 'N/A' },
+        { key: 'Location', val: car.location },
+      ];
+      document.getElementById('specGrid').innerHTML = specs.map(s => `
+        <div class="spec-item">
+          <div class="spec-key">${s.key}</div>
+          <div class="spec-val">${s.val}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('featuresList').innerHTML = (car.features || []).map(f =>
+        `<span class="feature-tag">✓ ${f}</span>`
+      ).join('') || '<span style="color:var(--text-muted);font-size:0.875rem;">No features listed</span>';
+
+      if (!car.isAvailable) {
+        document.getElementById('bookBtn').disabled = true;
+        document.getElementById('bookBtn').textContent = 'Not Available';
+      }
+    }
+
+    function setMainImage(src, el) {
+      document.getElementById('mainImage').src = src;
+      document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function recalcCost() {
+      const start = document.getElementById('bookStart').value;
+      const end   = document.getElementById('bookEnd').value;
+      const btn   = document.getElementById('bookBtn');
+      const breakdown = document.getElementById('costBreakdown');
+
+      if (start && end && end > start && car) {
+        const days = calcDays(start, end);
+        const total = days * car.pricePerDay;
+        document.getElementById('daysLabel').textContent = `${days} day${days > 1 ? 's' : ''} × ${formatCurrency(car.pricePerDay)}`;
+        document.getElementById('baseCost').textContent = formatCurrency(days * car.pricePerDay);
+        document.getElementById('totalCost').textContent = formatCurrency(total);
+        breakdown.style.display = 'block';
+        btn.disabled = !car.isAvailable;
+        btn.textContent = car.isAvailable ? `Book for ${formatCurrency(total)}` : 'Not Available';
+      } else {
+        breakdown.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Select Dates to Book';
+      }
+    }
+
+    function goBook() {
+      if (!Auth.isLoggedIn()) {
+        Toast.warning('Login required', 'Please login to book a car');
+        setTimeout(() => window.location.href = 'login.html', 1200);
+        return;
+      }
+      const start = document.getElementById('bookStart').value;
+      const end   = document.getElementById('bookEnd').value;
+      window.location.href = `book.html?carId=${carId}&start=${start}&end=${end}`;
+    }
+
+    // ── Calendar ──────────────────────────────────
+    async function loadAvailability() {
+      try {
+        const data = await API.getCarAvailability(carId, { month: calMonth, year: calYear });
+        bookedDates = data.bookedDates || [];
+        renderCalendar();
+      } catch { renderCalendar(); }
+    }
+
+    function changeMonth(dir) {
+      calMonth += dir;
+      if (calMonth > 12) { calMonth = 1; calYear++; }
+      if (calMonth < 1)  { calMonth = 12; calYear--; }
+      loadAvailability();
+    }
+
+    function renderCalendar() {
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      document.getElementById('calMonthLabel').textContent = `${monthNames[calMonth-1]} ${calYear}`;
+
+      const cal = document.getElementById('calendar');
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      let html = dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+
+      const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+      const today = todayStr();
+
+      for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isBooked = bookedDates.includes(dateStr);
+        const isPast   = dateStr < today;
+        const isToday  = dateStr === today;
+        let cls = 'cal-day';
+        if (isPast)    cls += ' other-month';
+        else if (isBooked) cls += ' booked';
+        else           cls += ' available';
+        if (isToday)   cls += ' today';
+        html += `<div class="${cls}" title="${dateStr}">${d}</div>`;
+      }
+
+      cal.innerHTML = html;
+    }
+
+    // ── Reviews ──────────────────────────────────
+    async function loadReviews() {
+      const el = document.getElementById('reviewsContainer');
+      try {
+        const data = await API.getCarReviews(carId);
+        if (!data.reviews.length) {
+          el.innerHTML = `<div style="color:var(--text-muted);font-size:0.875rem;padding:1rem 0;">No reviews yet. Be the first to review!</div>`;
+          return;
+        }
+        el.innerHTML = data.reviews.map(r => `
+          <div class="review-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+              <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div style="width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);color:#0a0a0f;font-size:0.95rem;">
+                  ${r.user?.name?.charAt(0) || 'U'}
+                </div>
+                <div>
+                  <div style="font-weight:600;font-size:0.875rem;">${r.user?.name || 'User'}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);">${formatDate(r.createdAt)}</div>
+                </div>
+              </div>
+              <div>${renderStars(r.rating)}</div>
+            </div>
+            <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.6;">${r.comment}</p>
+          </div>
+        `).join('');
+      } catch {
+        el.innerHTML = '<div style="color:var(--text-muted);font-size:0.875rem;">Could not load reviews.</div>';
+      }
+    }
+
+    loadCar();
+  </script>
+</body>
+</html>

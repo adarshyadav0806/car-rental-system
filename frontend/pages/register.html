@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — DriveLuxe</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body { display: flex; min-height: 100vh; }
+    .auth-visual {
+      flex: 1; position: relative; overflow: hidden;
+      background: #0a0a0f;
+      display: flex; align-items: center; justify-content: center;
+    }
+    @media (max-width: 768px) { .auth-visual { display: none; } }
+    .auth-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.2; }
+    .auth-panel {
+      width: 480px; min-width: 320px; background: var(--bg-secondary);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 3rem 2.5rem; overflow-y: auto;
+      border-left: 1px solid var(--border);
+    }
+    @media (max-width: 768px) { .auth-panel { width: 100%; border: none; padding: 2rem 1.5rem; } }
+    .auth-logo { font-family: var(--font-display); font-size: 2rem; letter-spacing: 0.08em; margin-bottom: 2rem; }
+    .auth-logo span { color: var(--accent); }
+    .auth-switch { text-align: center; font-size: 0.875rem; color: var(--text-secondary); margin-top: 1.5rem; }
+    .auth-switch a { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-visual">
+    <img src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1200&q=80" alt="Cars">
+    <div style="position:relative;text-align:center;padding:2rem;">
+      <div style="font-family:var(--font-display);font-size:4rem;letter-spacing:0.08em;margin-bottom:1rem;">
+        DRIVE<span style="color:var(--accent);">LUXE</span>
+      </div>
+      <p style="color:var(--text-secondary);max-width:300px;line-height:1.7;">
+        Create your account and start your premium rental experience today.
+      </p>
+    </div>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-logo"><a href="../index.html" style="text-decoration:none;">DRIVE<span>LUXE</span></a></div>
+    <h1 style="font-family:var(--font-display);font-size:2.5rem;margin-bottom:0.5rem;">Create account</h1>
+    <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:2rem;">Join thousands of happy drivers</p>
+
+    <form id="registerForm">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="name" class="form-control" placeholder="John Smith" required>
+          <div class="form-error" id="nameError"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone (optional)</label>
+          <input type="tel" id="phone" class="form-control" placeholder="+1 555 0100">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="email" class="form-control" placeholder="you@example.com" required>
+        <div class="form-error" id="emailError"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="password" class="form-control" placeholder="Min. 6 characters" required>
+          <button type="button" onclick="togglePwd()" style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;">👁</button>
+        </div>
+        <div class="form-error" id="pwdError"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" id="confirmPwd" class="form-control" placeholder="Repeat password" required>
+        <div class="form-error" id="confirmError"></div>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:flex;align-items:flex-start;gap:0.75rem;cursor:pointer;font-size:0.875rem;color:var(--text-secondary);">
+          <input type="checkbox" id="terms" style="margin-top:3px;accent-color:var(--accent);" required>
+          I agree to the <a href="#" style="color:var(--accent);">Terms of Service</a> and <a href="#" style="color:var(--accent);">Privacy Policy</a>
+        </label>
+        <div class="form-error" id="termsError"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="registerBtn">
+        Create Account
+      </button>
+    </form>
+
+    <div class="auth-switch" style="margin-top:1.5rem;">
+      Already have an account? <a href="login.html">Sign in →</a>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    if (Auth.isLoggedIn()) {
+      window.location.href = Auth.isAdmin() ? 'admin.html' : 'dashboard.html';
+    }
+
+    function togglePwd() {
+      const input = document.getElementById('password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function clearErrors() {
+      ['nameError','emailError','pwdError','confirmError','termsError'].forEach(id => {
+        document.getElementById(id).textContent = '';
+      });
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      const name       = document.getElementById('name').value.trim();
+      const phone      = document.getElementById('phone').value.trim();
+      const email      = document.getElementById('email').value.trim();
+      const password   = document.getElementById('password').value;
+      const confirmPwd = document.getElementById('confirmPwd').value;
+      const terms      = document.getElementById('terms').checked;
+
+      // Client-side validation
+      let hasError = false;
+      if (name.length < 2) { document.getElementById('nameError').textContent = 'Name must be at least 2 characters'; hasError = true; }
+      if (password.length < 6) { document.getElementById('pwdError').textContent = 'Password must be at least 6 characters'; hasError = true; }
+      if (password !== confirmPwd) { document.getElementById('confirmError').textContent = 'Passwords do not match'; hasError = true; }
+      if (!terms) { document.getElementById('termsError').textContent = 'You must accept the terms'; hasError = true; }
+      if (hasError) return;
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const data = await API.register({ name, email, password, phone });
+        Auth.save(data.token, data.user);
+        Toast.success('Account created!', 'Welcome to DriveLuxe!');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
+      } catch (err) {
+        Toast.error('Registration failed', err.message);
+        if (err.message.toLowerCase().includes('email')) {
+          document.getElementById('emailError').textContent = err.message;
+        }
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

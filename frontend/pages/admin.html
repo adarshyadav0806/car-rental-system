@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — DriveLuxe</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .analytics-chart {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.5rem; overflow: hidden;
+    }
+    .chart-bar-container { display: flex; align-items: flex-end; gap: 0.5rem; height: 120px; margin-top: 1rem; }
+    .chart-bar {
+      flex: 1; background: var(--accent-glow); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 4px 4px 0 0; position: relative; cursor: pointer;
+      transition: background 0.2s; min-width: 20px;
+    }
+    .chart-bar:hover { background: rgba(245,158,11,0.3); }
+    .chart-bar-label { font-size: 0.65rem; text-align: center; color: var(--text-muted); margin-top: 0.35rem; }
+
+    .top-car-row {
+      display: grid; grid-template-columns: 60px 1fr auto auto;
+      align-items: center; gap: 1rem;
+      padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    .top-car-row:last-child { border-bottom: none; }
+
+    .car-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .car-form-grid { grid-template-columns: 1fr; } }
+
+    .toggle-switch {
+      position: relative; width: 44px; height: 24px;
+      background: var(--border); border-radius: 12px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-switch.on { background: var(--success); }
+    .toggle-switch::after {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch.on::after { transform: translateX(20px); }
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" style="background:var(--danger);">A</div>
+          <div>
+            <div class="sidebar-user-name" id="adminName">Admin</div>
+            <div class="sidebar-user-role" style="color:var(--danger);">Administrator</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="sidebar-section-label">Analytics</span>
+        <a class="sidebar-link active" onclick="showTab('analytics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Analytics
+        </a>
+
+        <span class="sidebar-section-label">Manage</span>
+        <a class="sidebar-link" onclick="showTab('cars')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3M21 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg>
+          Cars
+          <span class="sidebar-badge" id="carCountBadge">—</span>
+        </a>
+        <a class="sidebar-link" onclick="showTab('bookings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          Bookings
+        </a>
+        <a class="sidebar-link" onclick="showTab('users')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </a>
+
+        <a class="sidebar-link" onclick="Auth.logout()" style="margin-top:auto;color:var(--danger);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Logout
+        </a>
+      </nav>
+    </div>
+
+    <main class="main-content">
+
+      <!-- ── Analytics Tab ─────────────────────── -->
+      <div id="analyticsTab">
+        <div style="margin-bottom:2rem;">
+          <h1 style="font-family:var(--font-display);font-size:2.5rem;">Admin Dashboard</h1>
+          <p style="color:var(--text-secondary);">Fleet and booking analytics at a glance.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon amber">🚗</div>
+            <div class="stat-card-value" id="statTotalCars">—</div>
+            <div class="stat-card-label">Total Cars</div>
+            <div class="stat-card-trend" id="statAvailCars"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue">📅</div>
+            <div class="stat-card-value" id="statTotalBookings">—</div>
+            <div class="stat-card-label">Total Bookings</div>
+            <div class="stat-card-trend" id="statActiveBookings"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green">💰</div>
+            <div class="stat-card-value" id="statRevenue">—</div>
+            <div class="stat-card-label">Total Revenue</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon red">👤</div>
+            <div class="stat-card-value" id="statUsers">—</div>
+            <div class="stat-card-label">Total Users</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;align-items:start;" id="analyticsGrid">
+          <!-- Chart -->
+          <div class="analytics-chart">
+            <div style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:0.25rem;">Bookings Trend</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Last 6 months</div>
+            <div class="chart-bar-container" id="bookingsChart"></div>
+            <div style="display:flex;gap:0.5rem;" id="chartLabels"></div>
+          </div>
+
+          <!-- Top Cars -->
+          <div class="analytics-chart">
+            <div style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:1rem;">Top Performing Cars</div>
+            <div id="topCarsList"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Cars Tab ──────────────────────────── -->
+      <div id="carsTab" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:var(--font-display);font-size:2rem;">Manage Cars</h2>
+          <button class="btn btn-primary" onclick="openCarForm()">+ Add Car</button>
+        </div>
+
+        <!-- Search -->
+        <div style="margin-bottom:1rem;">
+          <input type="text" id="carSearch" class="form-control" placeholder="Search cars..." oninput="debounce(loadAdminCars, 400)()">
+        </div>
+
+        <div class="table-container" id="adminCarsTable">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- ── Bookings Tab ──────────────────────── -->
+      <div id="bookingsTab" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:var(--font-display);font-size:2rem;">All Bookings</h2>
+          <select id="bookingStatusFilter" class="form-control" style="width:auto;" onchange="loadAdminBookings()">
+            <option value="">All Status</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Car</th><th>Customer</th><th>Dates</th><th>Days</th>
+                <th>Amount</th><th>Status</th><th>Payment</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminBookingsBody"><tr><td colspan="8"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Users Tab ─────────────────────────── -->
+      <div id="usersTab" style="display:none;">
+        <h2 style="font-family:var(--font-display);font-size:2rem;margin-bottom:1.5rem;">All Users</h2>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="usersTableBody"><tr><td colspan="7"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── Car Form Modal ──────────────────────── -->
+  <div class="modal-overlay" id="carFormModal">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <div class="modal-title" id="carFormTitle">Add New Car</div>
+        <button class="modal-close" onclick="closeModal('carFormModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="carForm" enctype="multipart/form-data">
+          <div class="car-form-grid">
+            <div class="form-group">
+              <label class="form-label">Car Name / Model</label>
+              <input type="text" id="cfName" class="form-control" placeholder="e.g. Model 3" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Brand</label>
+              <input type="text" id="cfBrand" class="form-control" placeholder="e.g. Tesla" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Model</label>
+              <input type="text" id="cfModel" class="form-control" placeholder="e.g. Model 3 LR" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year</label>
+              <input type="number" id="cfYear" class="form-control" placeholder="2023" min="2000" max="2026" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select id="cfType" class="form-control" required>
+                <option value="">Select type</option>
+                <option>Sedan</option><option>SUV</option><option>Hatchback</option>
+                <option>Luxury</option><option>Electric</option><option>Convertible</option>
+                <option>Truck</option><option>Van</option><option>Hybrid</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Transmission</label>
+              <select id="cfTransmission" class="form-control">
+                <option>Automatic</option><option>Manual</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fuel Type</label>
+              <select id="cfFuel" class="form-control">
+                <option>Petrol</option><option>Diesel</option><option>Electric</option><option>Hybrid</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Seats</label>
+              <input type="number" id="cfSeats" class="form-control" value="5" min="2" max="15" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price Per Day ($)</label>
+              <input type="number" id="cfPrice" class="form-control" placeholder="e.g. 99" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" id="cfLocation" class="form-control" placeholder="e.g. New York, NY" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mileage (km/l)</label>
+              <input type="number" id="cfMileage" class="form-control" placeholder="e.g. 15">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Available?</label>
+              <select id="cfAvailable" class="form-control">
+                <option value="true">Yes</option><option value="false">No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="cfDesc" class="form-control" rows="3" placeholder="Describe the car..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Features (comma-separated)</label>
+            <input type="text" id="cfFeatures" class="form-control" placeholder="GPS, Bluetooth, Sunroof, AC">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Car Images</label>
+            <input type="file" id="cfImages" class="form-control" multiple accept="image/*">
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.35rem;">Upload up to 5 images (JPEG, PNG, WebP)</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('carFormModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCarForm()" id="carFormSubmitBtn">Add Car</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay" id="deleteCarModal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <div class="modal-title">Delete Car</div>
+        <button class="modal-close" onclick="closeModal('deleteCarModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);">Are you sure you want to delete <strong id="deleteCarName"></strong>? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('deleteCarModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDeleteCar()" id="deleteCarBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    if (!Auth.requireAdmin()) {}
+
+    const user = Auth.getUser();
+    document.getElementById('navbar-root').innerHTML = renderNavbar('dashboard');
+    document.getElementById('adminName').textContent = user?.name || 'Admin';
+
+    let editingCarId = null;
+    let deletingCarId = null;
+
+    // Debounce helper
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    function showTab(tab) {
+      ['analytics','cars','bookings','users'].forEach(t => {
+        document.getElementById(`${t}Tab`).style.display = t === tab ? 'block' : 'none';
+      });
+      document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+
+      const tabMap = { analytics: 0, cars: 1, bookings: 2, users: 3 };
+      const links = document.querySelectorAll('.sidebar-link');
+      if (links[tabMap[tab]]) links[tabMap[tab]].classList.add('active');
+
+      if (tab === 'cars')     loadAdminCars();
+      if (tab === 'bookings') loadAdminBookings();
+      if (tab === 'users')    loadUsers();
+    }
+
+    // ── Analytics ──────────────────────────────
+    async function loadAnalytics() {
+      try {
+        const { analytics } = await API.getAnalytics();
+        document.getElementById('statTotalCars').textContent     = analytics.cars.total;
+        document.getElementById('statAvailCars').textContent     = `${analytics.cars.available} available`;
+        document.getElementById('statTotalBookings').textContent = analytics.bookings.total;
+        document.getElementById('statActiveBookings').textContent= `${analytics.bookings.active} active`;
+        document.getElementById('statRevenue').textContent       = formatCurrency(analytics.revenue);
+        document.getElementById('statUsers').textContent         = analytics.totalUsers;
+        document.getElementById('carCountBadge').textContent     = analytics.cars.total;
+
+        renderChart(analytics.bookingsByMonth);
+        renderTopCars(analytics.topCars);
+      } catch (err) {
+        console.error('Analytics error:', err.message);
+      }
+    }
+
+    function renderChart(data) {
+      if (!data || !data.length) {
+        document.getElementById('bookingsChart').innerHTML = '<div style="color:var(--text-muted);font-size:0.875rem;">No data yet</div>';
+        return;
+      }
+      const max = Math.max(...data.map(d => d.count), 1);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const container = document.getElementById('bookingsChart');
+      const labels    = document.getElementById('chartLabels');
+      container.innerHTML = data.map(d => {
+        const pct = Math.max((d.count / max) * 100, 4);
+        return `<div class="chart-bar" style="height:${pct}%;" title="${d.count} bookings"></div>`;
+      }).join('');
+      labels.innerHTML = data.map(d =>
+        `<div class="chart-bar-label" style="flex:1;">${months[d._id.month - 1]}</div>`
+      ).join('');
+    }
+
+    function renderTopCars(cars) {
+      const el = document.getElementById('topCarsList');
+      if (!cars || !cars.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:0.875rem;">No data yet</div>'; return; }
+      el.innerHTML = cars.map((c, i) => `
+        <div class="top-car-row">
+          <div style="font-family:var(--font-display);font-size:1.4rem;color:${i===0?'var(--accent)':'var(--text-muted)'};">#${i+1}</div>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;">${c.car.brand} ${c.car.name}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${c.count} bookings</div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:0.875rem;color:var(--success);">${formatCurrency(c.revenue)}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── Cars ────────────────────────────────────
+    async function loadAdminCars() {
+      const el = document.getElementById('adminCarsTable');
+      const search = document.getElementById('carSearch')?.value || '';
+      try {
+        const { cars } = await API.getCars({ search, limit: 50 });
+        if (!cars.length) { el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🚗</div><div class="empty-state-title">No cars found</div></div>'; return; }
+        el.innerHTML = `
+          <table>
+            <thead>
+              <tr><th>Car</th><th>Type</th><th>Price</th><th>Location</th><th>Bookings</th><th>Rating</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${cars.map(c => `
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                      <img src="${carImageSrc(c.images)}" style="width:48px;height:36px;border-radius:6px;object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=100&q=60'">
+                      <div>
+                        <div style="font-weight:600;font-size:0.875rem;">${c.brand} ${c.name}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">${c.year} · ${c.transmission}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-neutral">${c.type}</span></td>
+                  <td style="font-family:var(--font-mono);color:var(--accent);">${formatCurrency(c.pricePerDay)}</td>
+                  <td style="font-size:0.82rem;color:var(--text-secondary);">${c.location}</td>
+                  <td style="text-align:center;">${c.totalBookings}</td>
+                  <td>${c.rating > 0 ? `★ ${c.rating}` : '—'}</td>
+                  <td>${c.isAvailable ? '<span class="badge badge-success">Available</span>' : '<span class="badge badge-danger">Unavailable</span>'}</td>
+                  <td>
+                    <div style="display:flex;gap:0.4rem;">
+                      <button class="btn btn-outline btn-sm" onclick="openEditCar('${c._id}')">Edit</button>
+                      <button class="btn btn-danger btn-sm" onclick="openDeleteCar('${c._id}','${c.name}')">Del</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch (err) { Toast.error('Error', err.message); }
+    }
+
+    function openCarForm(carId = null) {
+      editingCarId = carId;
+      document.getElementById('carForm').reset();
+      document.getElementById('carFormTitle').textContent = carId ? 'Edit Car' : 'Add New Car';
+      document.getElementById('carFormSubmitBtn').textContent = carId ? 'Save Changes' : 'Add Car';
+      openModal('carFormModal');
+    }
+
+    async function openEditCar(carId) {
+      openCarForm(carId);
+      try {
+        const { car } = await API.getCar(carId);
+        document.getElementById('cfName').value         = car.name;
+        document.getElementById('cfBrand').value        = car.brand;
+        document.getElementById('cfModel').value        = car.model;
+        document.getElementById('cfYear').value         = car.year;
+        document.getElementById('cfType').value         = car.type;
+        document.getElementById('cfTransmission').value = car.transmission;
+        document.getElementById('cfFuel').value         = car.fuelType;
+        document.getElementById('cfSeats').value        = car.seats;
+        document.getElementById('cfPrice').value        = car.pricePerDay;
+        document.getElementById('cfLocation').value     = car.location;
+        document.getElementById('cfMileage').value      = car.mileage;
+        document.getElementById('cfAvailable').value    = car.isAvailable ? 'true' : 'false';
+        document.getElementById('cfDesc').value         = car.description || '';
+        document.getElementById('cfFeatures').value     = (car.features || []).join(', ');
+      } catch (err) { Toast.error('Error loading car', err.message); }
+    }
+
+    async function submitCarForm() {
+      const btn = document.getElementById('carFormSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const fd = new FormData();
+      fd.append('name',         document.getElementById('cfName').value);
+      fd.append('brand',        document.getElementById('cfBrand').value);
+      fd.append('model',        document.getElementById('cfModel').value);
+      fd.append('year',         document.getElementById('cfYear').value);
+      fd.append('type',         document.getElementById('cfType').value);
+      fd.append('transmission', document.getElementById('cfTransmission').value);
+      fd.append('fuelType',     document.getElementById('cfFuel').value);
+      fd.append('seats',        document.getElementById('cfSeats').value);
+      fd.append('pricePerDay',  document.getElementById('cfPrice').value);
+      fd.append('location',     document.getElementById('cfLocation').value);
+      fd.append('mileage',      document.getElementById('cfMileage').value || 0);
+      fd.append('isAvailable',  document.getElementById('cfAvailable').value);
+      fd.append('description',  document.getElementById('cfDesc').value);
+      fd.append('features',     document.getElementById('cfFeatures').value);
+
+      const files = document.getElementById('cfImages').files;
+      for (const f of files) fd.append('images', f);
+
+      try {
+        if (editingCarId) {
+          await API.updateCar(editingCarId, fd);
+          Toast.success('Car updated!');
+        } else {
+          await API.createCar(fd);
+          Toast.success('Car added!');
+        }
+        closeModal('carFormModal');
+        loadAdminCars();
+        loadAnalytics();
+      } catch (err) {
+        Toast.error('Failed', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = editingCarId ? 'Save Changes' : 'Add Car';
+      }
+    }
+
+    function openDeleteCar(id, name) {
+      deletingCarId = id;
+      document.getElementById('deleteCarName').textContent = name;
+      openModal('deleteCarModal');
+    }
+
+    async function confirmDeleteCar() {
+      const btn = document.getElementById('deleteCarBtn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+      try {
+        await API.deleteCar(deletingCarId);
+        closeModal('deleteCarModal');
+        Toast.success('Car deleted!');
+        loadAdminCars();
+        loadAnalytics();
+      } catch (err) {
+        Toast.error('Failed to delete', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+      }
+    }
+
+    // ── Bookings ─────────────────────────────────
+    async function loadAdminBookings() {
+      const tbody = document.getElementById('adminBookingsBody');
+      const status = document.getElementById('bookingStatusFilter')?.value || '';
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
+      try {
+        const { bookings } = await API.getAllBookings(status ? { status } : {});
+        if (!bookings.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No bookings found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = bookings.map(b => `
+          <tr>
+            <td style="font-weight:600;font-size:0.875rem;">${b.car?.brand || ''} ${b.car?.name || '—'}</td>
+            <td>
+              <div style="font-size:0.875rem;">${b.user?.name || '—'}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">${b.user?.email || ''}</div>
+            </td>
+            <td style="font-size:0.78rem;">${formatDate(b.startDate)} → ${formatDate(b.endDate)}</td>
+            <td style="text-align:center;">${b.totalDays}</td>
+            <td style="font-family:var(--font-mono);color:var(--accent);">${formatCurrency(b.totalAmount)}</td>
+            <td>${statusBadge(b.status)}</td>
+            <td>${paymentBadge(b.paymentStatus)}</td>
+            <td>
+              <select class="form-control" style="width:auto;padding:0.3rem 0.5rem;font-size:0.75rem;" onchange="updateStatus('${b._id}',this.value)">
+                <option value="">Change status</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        Toast.error('Error loading bookings', err.message);
+      }
+    }
+
+    async function updateStatus(bookingId, status) {
+      if (!status) return;
+      try {
+        await API.updateBookingStatus(bookingId, status);
+        Toast.success('Status updated!');
+        loadAdminBookings();
+      } catch (err) {
+        Toast.error('Failed', err.message);
+      }
+    }
+
+    // ── Users ─────────────────────────────────────
+    async function loadUsers() {
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
+      try {
+        const { users } = await API.getUsers();
+        if (!users.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No users found</td></tr>';
+          return;
+        }
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);color:#0a0a0f;font-size:0.85rem;">${u.name.charAt(0)}</div>
+                <span style="font-weight:600;font-size:0.875rem;">${u.name}</span>
+              </div>
+            </td>
+            <td style="font-size:0.82rem;color:var(--text-secondary);">${u.email}</td>
+            <td style="font-size:0.82rem;">${u.phone || '—'}</td>
+            <td>${u.role === 'admin' ? '<span class="badge badge-danger">Admin</span>' : '<span class="badge badge-neutral">User</span>'}</td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">${formatDate(u.createdAt)}</td>
+            <td>${u.isActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>'}</td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="toggleUser('${u._id}')">
+                ${u.isActive ? 'Deactivate' : 'Activate'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        Toast.error('Error loading users', err.message);
+      }
+    }
+
+    async function toggleUser(userId) {
+      try {
+        await API.toggleUserStatus(userId);
+        Toast.success('User status updated!');
+        loadUsers();
+      } catch (err) {
+        Toast.error('Failed', err.message);
+      }
+    }
+
+    // ── Init ──────────────────────────────────────
+    loadAnalytics();
+  </script>
+</body>
+</html>

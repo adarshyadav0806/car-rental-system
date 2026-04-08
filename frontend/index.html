@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DriveLuxe — Premium Car Rental</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding: 80px 0;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 50%, rgba(200,169,110,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 80% at 20% 30%, rgba(91,141,238,0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--primary-glow);
+      border: 1px solid rgba(200,169,110,0.25);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #f0ede8 0%, #c8a96e 50%, #f0ede8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 36px;
+    }
+
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .hero-stat-item { text-align: center; }
+    .hero-stat-value { font-family: var(--font-display); font-size: 1.8rem; color: var(--primary); }
+    .hero-stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-card-stack {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .hero-main-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hero-car-display {
+      text-align: center;
+      font-size: 8rem;
+      padding: 20px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .hero-card-info { display: flex; justify-content: space-between; align-items: flex-end; }
+    .hero-card-name { font-family: var(--font-display); font-size: 1.2rem; }
+    .hero-card-price { color: var(--primary); font-family: var(--font-display); font-size: 1.5rem; }
+
+    .floating-badge {
+      position: absolute;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      box-shadow: var(--shadow-md);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .floating-badge.top-right { top: -20px; right: -20px; animation-delay: 0.5s; }
+    .floating-badge.bottom-left { bottom: -20px; left: -20px; animation-delay: 1s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* ── Search Bar ── */
+    .search-section {
+      padding: 0 0 64px;
+      margin-top: -40px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .search-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    /* ── Features ── */
+    .features-section { padding: 80px 0; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: var(--transition);
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 { margin-bottom: 10px; font-size: 1.1rem; }
+    .feature-card p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; }
+
+    /* ── Featured Cars ── */
+    .cars-section { padding: 80px 0; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(200,169,110,0.08) 0%, transparent 70%);
+    }
+
+    .cta-section h2 { margin-bottom: 16px; }
+    .cta-section p { color: var(--text-secondary); max-width: 500px; margin: 0 auto 36px; font-size: 1.05rem; }
+
+    @media (max-width: 1024px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .search-bar { grid-template-columns: 1fr 1fr; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .search-bar { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .hero-stats { flex-wrap: wrap; gap: 20px; }
+    }
+  </style>
+</head>
+<body class="page-wrapper">
+
+  <!-- Navbar injected by JS -->
+
+  <main>
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <div class="hero-eyebrow">⭐ Rated #1 Car Rental Service</div>
+            <h1>Drive Your Dream Car Today</h1>
+            <p class="hero-desc">
+              Explore our premium fleet of luxury, electric, and everyday vehicles.
+              Seamless booking, transparent pricing, and unmatched comfort.
+            </p>
+            <div class="hero-actions">
+              <a href="./pages/cars.html" class="btn btn-primary btn-lg">Browse All Cars</a>
+              <a href="./pages/register.html" class="btn btn-outline btn-lg">Get Started Free</a>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-stat-item">
+                <div class="hero-stat-value">500+</div>
+                <div class="hero-stat-label">Vehicles</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-value">50K+</div>
+                <div class="hero-stat-label">Happy Customers</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-value">4.9★</div>
+                <div class="hero-stat-label">Average Rating</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="hero-card-stack">
+              <div class="floating-badge top-right">
+                🟢 <strong>Available Now</strong><br>
+                <span style="color:var(--text-muted);font-size:0.75rem">128 cars near you</span>
+              </div>
+              <div class="hero-main-card">
+                <div class="hero-car-display">🏎️</div>
+                <div class="hero-card-info">
+                  <div>
+                    <div class="hero-card-name">BMW M4 Competition</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">4.9 ★ · Luxury · Auto</div>
+                  </div>
+                  <div>
+                    <div class="hero-card-price">$175</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);text-align:right">/day</div>
+                  </div>
+                </div>
+              </div>
+              <div class="floating-badge bottom-left">
+                🔒 <strong>Secure Payment</strong><br>
+                <span style="color:var(--text-muted);font-size:0.75rem">Instant confirmation</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Quick Search ── -->
+    <section class="search-section">
+      <div class="container">
+        <div class="search-bar">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control" id="search-location" placeholder="City or airport..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Car Type</label>
+            <select class="form-control" id="search-type">
+              <option value="">All Types</option>
+              <option>Sedan</option><option>SUV</option><option>Luxury</option>
+              <option>Electric</option><option>Hatchback</option><option>Convertible</option>
+              <option>Truck</option><option>Van</option><option>Hybrid</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Price / Day</label>
+            <input type="number" class="form-control" id="search-price" placeholder="e.g. 200" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Transmission</label>
+            <select class="form-control" id="search-transmission">
+              <option value="">Any</option>
+              <option>Automatic</option>
+              <option>Manual</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="height:48px;white-space:nowrap" onclick="doSearch()">
+            🔍 Search
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Features ── -->
+    <section class="features-section">
+      <div class="container">
+        <div style="text-align:center;max-width:600px;margin:0 auto">
+          <h2>Why Choose DriveLuxe?</h2>
+          <p style="color:var(--text-secondary);margin-top:12px;font-size:1rem">Everything you need for a perfect rental experience, from booking to return.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Instant Booking</h3>
+            <p>Book your car in under 2 minutes. Get instant confirmation with no hidden fees or surprise charges.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Fully Insured</h3>
+            <p>Every vehicle comes with comprehensive insurance. Drive with peace of mind wherever you go.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌍</div>
+            <h3>50+ Locations</h3>
+            <p>Pick up and drop off at any of our conveniently located stations across the country.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💳</div>
+            <h3>Flexible Payment</h3>
+            <p>Pay by card, digital wallet, or cash. Cancel free up to 24 hours before your booking starts.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🚗</div>
+            <h3>Premium Fleet</h3>
+            <p>From economy to luxury, electric to SUV — our diverse fleet has the perfect car for every journey.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>24/7 Support</h3>
+            <p>Our dedicated team is available around the clock to assist you with anything you need.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Featured Cars ── -->
+    <section class="cars-section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Featured Vehicles</h2>
+            <p class="section-subtitle">Handpicked selection from our premium fleet</p>
+          </div>
+          <a href="./pages/cars.html" class="btn btn-outline">View All Cars →</a>
+        </div>
+        <div class="grid-cars" id="featured-cars">
+          <div class="loading-overlay"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="cta-section">
+      <div class="container" style="position:relative;z-index:1">
+        <h2>Ready to Hit the Road?</h2>
+        <p>Join thousands of happy drivers. Create your free account and get $20 off your first booking.</p>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+          <a href="./pages/register.html" class="btn btn-primary btn-lg">Create Free Account</a>
+          <a href="./pages/cars.html" class="btn btn-outline btn-lg">Browse Fleet</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/main.js"></script>
+  <script>
+    renderNavbar('home');
+    renderFooter();
+    loadFeaturedCars();
+
+    async function loadFeaturedCars() {
+      try {
+        const data = await api.get('/cars?limit=6&sort=rating&available=true');
+        const container = document.getElementById('featured-cars');
+        if (!data.cars.length) {
+          container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🚗</div><h3>No cars available</h3><p>Check back soon!</p></div>`;
+          return;
+        }
+        container.innerHTML = data.cars.map(car => renderCarCard(car)).join('');
+      } catch (err) {
+        document.getElementById('featured-cars').innerHTML = `<div class="alert alert-danger" style="grid-column:1/-1">Could not load cars. Make sure the server is running.</div>`;
+      }
+    }
+
+    function doSearch() {
+      const location = document.getElementById('search-location').value;
+      const type = document.getElementById('search-type').value;
+      const price = document.getElementById('search-price').value;
+      const transmission = document.getElementById('search-transmission').value;
+
+      const params = new URLSearchParams();
+      if (location) params.set('location', location);
+      if (type) params.set('type', type);
+      if (price) params.set('maxPrice', price);
+      if (transmission) params.set('transmission', transmission);
+
+      window.location.href = `./pages/cars.html?${params.toString()}`;
+    }
+  </script>
+</body>
+</html>

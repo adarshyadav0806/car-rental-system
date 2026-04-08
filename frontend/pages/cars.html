@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Cars — DriveLuxe</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .cars-layout {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .cars-layout { grid-template-columns: 1fr; }
+      .filter-sidebar { display: none; }
+      .filter-sidebar.open { display: block; }
+    }
+    .results-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .mobile-filter-btn {
+      display: none;
+    }
+    @media (max-width: 1024px) { .mobile-filter-btn { display: flex; } }
+  </style>
+</head>
+<body>
+
+  <div id="navbar-root"></div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-header-title">Our Fleet</h1>
+    <p class="page-header-subtitle">Find the perfect vehicle for your next adventure</p>
+  </div>
+
+  <div class="cars-layout" style="padding-top:2.5rem;">
+
+    <!-- ── Filter Sidebar ── -->
+    <aside class="filter-panel filter-sidebar" id="filterSidebar" style="position:sticky;top:calc(var(--header-h) + 1.5rem);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+        <h3 class="filter-title" style="margin:0;">Filters</h3>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear All</button>
+      </div>
+
+      <!-- Car Type -->
+      <div class="filter-group">
+        <span class="filter-label">Car Type</span>
+        <div class="filter-chips" id="typeChips">
+          <span class="chip active" data-val="" onclick="selectChip(this,'typeChips')">All</span>
+          <span class="chip" data-val="Sedan"       onclick="selectChip(this,'typeChips')">Sedan</span>
+          <span class="chip" data-val="SUV"         onclick="selectChip(this,'typeChips')">SUV</span>
+          <span class="chip" data-val="Hatchback"   onclick="selectChip(this,'typeChips')">Hatchback</span>
+          <span class="chip" data-val="Luxury"      onclick="selectChip(this,'typeChips')">Luxury</span>
+          <span class="chip" data-val="Electric"    onclick="selectChip(this,'typeChips')">Electric</span>
+          <span class="chip" data-val="Convertible" onclick="selectChip(this,'typeChips')">Convertible</span>
+          <span class="chip" data-val="Truck"       onclick="selectChip(this,'typeChips')">Truck</span>
+          <span class="chip" data-val="Hybrid"      onclick="selectChip(this,'typeChips')">Hybrid</span>
+        </div>
+      </div>
+
+      <!-- Transmission -->
+      <div class="filter-group">
+        <span class="filter-label">Transmission</span>
+        <div class="filter-chips" id="transChips">
+          <span class="chip active" data-val="" onclick="selectChip(this,'transChips')">Any</span>
+          <span class="chip" data-val="Automatic" onclick="selectChip(this,'transChips')">Automatic</span>
+          <span class="chip" data-val="Manual"    onclick="selectChip(this,'transChips')">Manual</span>
+        </div>
+      </div>
+
+      <!-- Fuel Type -->
+      <div class="filter-group">
+        <span class="filter-label">Fuel Type</span>
+        <div class="filter-chips" id="fuelChips">
+          <span class="chip active" data-val="" onclick="selectChip(this,'fuelChips')">Any</span>
+          <span class="chip" data-val="Petrol"   onclick="selectChip(this,'fuelChips')">Petrol</span>
+          <span class="chip" data-val="Diesel"   onclick="selectChip(this,'fuelChips')">Diesel</span>
+          <span class="chip" data-val="Electric" onclick="selectChip(this,'fuelChips')">Electric</span>
+          <span class="chip" data-val="Hybrid"   onclick="selectChip(this,'fuelChips')">Hybrid</span>
+        </div>
+      </div>
+
+      <!-- Price Range -->
+      <div class="filter-group">
+        <span class="filter-label">Max Price / Day</span>
+        <div class="price-range">
+          <span style="color:var(--text-muted);font-size:0.8rem;">$0</span>
+          <input type="range" id="maxPrice" min="0" max="500" value="500" step="10"
+                 oninput="document.getElementById('priceLabel').textContent='$'+this.value;applyFilters()">
+          <span id="priceLabel" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--accent);min-width:48px;">$500</span>
+        </div>
+      </div>
+
+      <!-- Availability -->
+      <div class="filter-group">
+        <span class="filter-label">Availability</span>
+        <div class="filter-chips" id="availChips">
+          <span class="chip active" data-val="" onclick="selectChip(this,'availChips')">All</span>
+          <span class="chip" data-val="true" onclick="selectChip(this,'availChips')">Available Now</span>
+        </div>
+      </div>
+
+      <!-- Seats -->
+      <div class="filter-group">
+        <span class="filter-label">Seats</span>
+        <div class="filter-chips" id="seatChips">
+          <span class="chip active" data-val="" onclick="selectChip(this,'seatChips')">Any</span>
+          <span class="chip" data-val="2" onclick="selectChip(this,'seatChips')">2</span>
+          <span class="chip" data-val="4" onclick="selectChip(this,'seatChips')">4</span>
+          <span class="chip" data-val="5" onclick="selectChip(this,'seatChips')">5</span>
+          <span class="chip" data-val="7" onclick="selectChip(this,'seatChips')">7+</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Results Panel ── -->
+    <div>
+      <div class="results-header">
+        <div>
+          <h2 style="font-family:var(--font-display);font-size:1.5rem;" id="resultCount">Loading...</h2>
+          <div style="font-size:0.82rem;color:var(--text-muted);" id="resultMeta"></div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm mobile-filter-btn" onclick="toggleFilterSidebar()">
+            ⚙️ Filters
+          </button>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <label style="font-size:0.82rem;color:var(--text-muted);">Sort:</label>
+            <select id="sortSelect" class="form-control" style="width:auto;padding:0.5rem 0.75rem;font-size:0.82rem;" onchange="applyFilters()">
+              <option value="">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+              <option value="popular">Most Popular</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:0.4rem;">
+            <button class="btn btn-outline btn-sm" id="gridViewBtn" onclick="setView('grid')" title="Grid view">▦</button>
+            <button class="btn btn-outline btn-sm" id="listViewBtn" onclick="setView('list')" title="List view">≡</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search bar -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="position:relative;">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search by name, brand, or model..."
+                 oninput="debounceSearch()" style="padding-left:2.75rem;">
+          <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);">🔍</span>
+        </div>
+      </div>
+
+      <div class="cars-grid" id="carsGrid"></div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    document.getElementById('navbar-root').innerHTML = renderNavbar('cars');
+
+    let currentPage = 1;
+    let searchTimer = null;
+    let currentView = 'grid';
+
+    // Read URL params on load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('search')) document.getElementById('searchInput').value = urlParams.get('search');
+    if (urlParams.get('type')) {
+      const chip = document.querySelector(`#typeChips [data-val="${urlParams.get('type')}"]`);
+      if (chip) selectChip(chip, 'typeChips');
+    }
+
+    function getChipVal(groupId) {
+      const active = document.querySelector(`#${groupId} .chip.active`);
+      return active ? active.dataset.val : '';
+    }
+
+    function selectChip(el, groupId) {
+      document.querySelectorAll(`#${groupId} .chip`).forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      currentPage = 1;
+      applyFilters();
+    }
+
+    function clearFilters() {
+      ['typeChips','transChips','fuelChips','availChips','seatChips'].forEach(id => {
+        document.querySelector(`#${id} .chip`).click();
+      });
+      document.getElementById('maxPrice').value = 500;
+      document.getElementById('priceLabel').textContent = '$500';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('sortSelect').value = '';
+      currentPage = 1;
+      loadCars();
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { currentPage = 1; applyFilters(); }, 400);
+    }
+
+    function applyFilters() { currentPage = 1; loadCars(); }
+
+    function setView(v) {
+      currentView = v;
+      const grid = document.getElementById('carsGrid');
+      if (v === 'list') {
+        grid.style.gridTemplateColumns = '1fr';
+      } else {
+        grid.style.gridTemplateColumns = '';
+      }
+    }
+
+    function toggleFilterSidebar() {
+      document.getElementById('filterSidebar').classList.toggle('open');
+    }
+
+    async function loadCars() {
+      const grid = document.getElementById('carsGrid');
+      showLoading(grid, 'Finding your perfect car...');
+
+      const params = {
+        search:       document.getElementById('searchInput').value.trim(),
+        type:         getChipVal('typeChips'),
+        transmission: getChipVal('transChips'),
+        fuelType:     getChipVal('fuelChips'),
+        available:    getChipVal('availChips'),
+        seats:        getChipVal('seatChips'),
+        maxPrice:     document.getElementById('maxPrice').value < 500 ? document.getElementById('maxPrice').value : '',
+        sort:         document.getElementById('sortSelect').value,
+        page:         currentPage,
+        limit:        12
+      };
+
+      // Remove empty params
+      Object.keys(params).forEach(k => !params[k] && delete params[k]);
+
+      try {
+        const data = await API.getCars(params);
+        const { cars, total, totalPages } = data;
+
+        document.getElementById('resultCount').textContent =
+          total === 0 ? 'No cars found' : `${total} Vehicle${total !== 1 ? 's' : ''} found`;
+        document.getElementById('resultMeta').textContent =
+          totalPages > 1 ? `Page ${currentPage} of ${totalPages}` : '';
+
+        if (!cars.length) {
+          showEmpty(grid, 'No cars match your filters', 'Try adjusting your search criteria',
+            `<button class="btn btn-outline btn-sm" onclick="clearFilters()">Clear Filters</button>`);
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+
+        grid.innerHTML = cars.map(renderCarCard).join('');
+
+        // Render pagination
+        renderPagination(totalPages);
+      } catch (err) {
+        grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Error loading cars</div><div class="empty-state-text">${err.message}</div></div>`;
+      }
+    }
+
+    function renderPagination(totalPages) {
+      const el = document.getElementById('pagination');
+      if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+      let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+          html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+        } else if (Math.abs(i - currentPage) === 2) {
+          html += `<span style="color:var(--text-muted);padding:0 0.25rem;">…</span>`;
+        }
+      }
+      html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+      el.innerHTML = html;
+    }
+
+    function goPage(p) {
+      currentPage = p;
+      loadCars();
+      window.scrollTo({ top: document.querySelector('.cars-layout').offsetTop - 80, behavior: 'smooth' });
+    }
+
+    loadCars();
+  </script>
+</body>
+</html>

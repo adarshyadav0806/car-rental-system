@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — DriveLuxe</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .booking-row {
+      display: grid;
+      grid-template-columns: 80px 1fr auto auto auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .booking-row:last-child { border-bottom: none; }
+    .booking-row:hover { background: var(--bg-hover); }
+    @media (max-width: 640px) { .booking-row { grid-template-columns: 60px 1fr; gap: 0.5rem; } }
+
+    .booking-thumb { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; }
+
+    .review-form { display: none; }
+    .review-form.open { display: block; }
+  </style>
+</head>
+<body>
+  <div id="navbar-root"></div>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="avatarInitial">U</div>
+          <div>
+            <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+            <div class="sidebar-user-role">Member</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="sidebar-section-label">Menu</span>
+        <a class="sidebar-link active" onclick="showTab('overview')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Overview
+        </a>
+        <a class="sidebar-link" onclick="showTab('bookings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          My Bookings
+          <span class="sidebar-badge" id="bookingCount">—</span>
+        </a>
+        <a class="sidebar-link" onclick="showTab('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+        <span class="sidebar-section-label">Explore</span>
+        <a class="sidebar-link" href="cars.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3M13 17l2 2 4-4M21 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg>
+          Browse Cars
+        </a>
+        <a class="sidebar-link" onclick="Auth.logout()" style="margin-top:auto;color:var(--danger);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Logout
+        </a>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- ── Overview Tab ────────────────── -->
+      <div id="overviewTab">
+        <div style="margin-bottom:2rem;">
+          <h1 style="font-family:var(--font-display);font-size:2.5rem;">Welcome back, <span class="text-accent" id="welcomeName">—</span></h1>
+          <p style="color:var(--text-secondary);">Here's a summary of your rental activity.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon amber">📅</div>
+            <div class="stat-card-value" id="totalBookings">—</div>
+            <div class="stat-card-label">Total Bookings</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon green">✅</div>
+            <div class="stat-card-value" id="activeBookings">—</div>
+            <div class="stat-card-label">Active / Upcoming</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue">💰</div>
+            <div class="stat-card-value" id="totalSpent">—</div>
+            <div class="stat-card-label">Total Spent</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon red">🚫</div>
+            <div class="stat-card-value" id="cancelledBookings">—</div>
+            <div class="stat-card-label">Cancelled</div>
+          </div>
+        </div>
+
+        <!-- Recent bookings -->
+        <div class="table-container" style="margin-top:1.5rem;">
+          <div class="table-header">
+            <div class="table-title">Recent Bookings</div>
+            <button class="btn btn-outline btn-sm" onclick="showTab('bookings')">View All</button>
+          </div>
+          <div id="recentBookings"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- ── Bookings Tab ────────────────── -->
+      <div id="bookingsTab" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-family:var(--font-display);font-size:2rem;">My Bookings</h2>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <select id="bookingFilter" class="form-control" style="width:auto;" onchange="loadBookings()">
+              <option value="">All Status</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <a href="cars.html" class="btn btn-primary btn-sm">+ Book a Car</a>
+          </div>
+        </div>
+        <div id="bookingsList"><div class="spinner"></div></div>
+      </div>
+
+      <!-- ── Profile Tab ────────────────── -->
+      <div id="profileTab" style="display:none;">
+        <h2 style="font-family:var(--font-display);font-size:2rem;margin-bottom:1.5rem;">My Profile</h2>
+
+        <div class="card" style="max-width:540px;">
+          <div class="card-header">
+            <div style="font-family:var(--font-display);font-size:1.2rem;">Personal Information</div>
+          </div>
+          <div class="card-body">
+            <form id="profileForm">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="profileName" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="profileEmail" class="form-control" disabled style="opacity:0.6;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" id="profilePhone" class="form-control" placeholder="+1 555 0100">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Driver's License</label>
+                <input type="text" id="profileLicense" class="form-control" placeholder="DL-XXXX-XXXX">
+              </div>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:540px;margin-top:1.5rem;">
+          <div class="card-header">
+            <div style="font-family:var(--font-display);font-size:1.2rem;">Change Password</div>
+          </div>
+          <div class="card-body">
+            <form id="passwordForm">
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" id="currentPwd" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" id="newPwd" class="form-control" minlength="6" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Update Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Cancel Modal -->
+  <div class="modal-overlay" id="cancelModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Cancel Booking</div>
+        <button class="modal-close" onclick="closeModal('cancelModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);margin-bottom:1rem;">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+        <div class="form-group">
+          <label class="form-label">Reason (optional)</label>
+          <textarea id="cancelReason" class="form-control" rows="3" placeholder="Why are you cancelling?"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('cancelModal')">Keep Booking</button>
+        <button class="btn btn-danger" onclick="submitCancel()" id="cancelConfirmBtn">Cancel Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Write a Review</div>
+        <button class="modal-close" onclick="closeModal('reviewModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.75rem;">Your rating:</div>
+          <div id="ratingStars" style="display:flex;gap:0.5rem;font-size:2rem;">
+            ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}" onclick="setRating(${i})" style="cursor:pointer;color:var(--text-muted);">★</span>`).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Review</label>
+          <textarea id="reviewComment" class="form-control" rows="4" placeholder="Share your experience with this car..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('reviewModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReview()" id="reviewSubmitBtn">Submit Review</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    if (!Auth.requireAuth()) {}
+
+    let allBookings = [];
+    let cancellingId = null;
+    let reviewingBooking = null;
+    let selectedRating = 0;
+
+    const user = Auth.getUser();
+    document.getElementById('navbar-root').innerHTML = renderNavbar('dashboard');
+    document.getElementById('welcomeName').textContent = user.name.split(' ')[0];
+    document.getElementById('sidebarName').textContent = user.name;
+    document.getElementById('avatarInitial').textContent = user.name.charAt(0).toUpperCase();
+
+    function showTab(tab) {
+      ['overview','bookings','profile'].forEach(t => {
+        document.getElementById(`${t}Tab`).style.display = t === tab ? 'block' : 'none';
+      });
+      document.querySelectorAll('.sidebar-link').forEach((el, i) => {
+        el.classList.remove('active');
+        if ((tab === 'overview' && i === 0) || (tab === 'bookings' && i === 1) || (tab === 'profile' && i === 2)) {
+          el.classList.add('active');
+        }
+      });
+      if (tab === 'bookings') loadBookings();
+      if (tab === 'profile')  loadProfile();
+    }
+
+    async function loadDashboard() {
+      try {
+        const data = await API.getMyBookings({ limit: 100 });
+        allBookings = data.bookings || [];
+
+        const total     = allBookings.length;
+        const active    = allBookings.filter(b => ['confirmed','active'].includes(b.status)).length;
+        const cancelled = allBookings.filter(b => b.status === 'cancelled').length;
+        const spent     = allBookings.filter(b => !['cancelled'].includes(b.status)).reduce((s, b) => s + b.totalAmount, 0);
+
+        document.getElementById('totalBookings').textContent   = total;
+        document.getElementById('activeBookings').textContent  = active;
+        document.getElementById('cancelledBookings').textContent = cancelled;
+        document.getElementById('totalSpent').textContent      = formatCurrency(spent);
+        document.getElementById('bookingCount').textContent    = active;
+
+        renderRecentBookings(allBookings.slice(0, 5));
+      } catch (err) {
+        Toast.error('Error', err.message);
+      }
+    }
+
+    function renderRecentBookings(bookings) {
+      const el = document.getElementById('recentBookings');
+      if (!bookings.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">No bookings yet</div><div class="empty-state-text">Start exploring our fleet!</div><a href="cars.html" class="btn btn-primary btn-sm" style="margin-top:1rem;">Browse Cars</a></div>`;
+        return;
+      }
+      el.innerHTML = bookings.map(b => `
+        <div class="booking-row">
+          <img class="booking-thumb" src="${carImageSrc(b.car?.images)}" alt="${b.car?.name}" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=200&q=60'">
+          <div>
+            <div style="font-weight:600;font-size:0.95rem;">${b.car?.brand} ${b.car?.name || '—'}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">${formatDateRange(b.startDate, b.endDate)} · ${b.totalDays} days</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--font-mono);color:var(--accent);font-weight:700;">${formatCurrency(b.totalAmount)}</div>
+          </div>
+          <div>${statusBadge(b.status)}</div>
+          <div style="display:flex;gap:0.5rem;">
+            ${b.status === 'confirmed' ? `<button class="btn btn-danger btn-sm" onclick="openCancel('${b._id}')">Cancel</button>` : ''}
+            ${b.status === 'completed' ? `<button class="btn btn-outline btn-sm" onclick="openReview('${b._id}','${b.car?._id}')">Review</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadBookings() {
+      const el = document.getElementById('bookingsList');
+      const status = document.getElementById('bookingFilter')?.value || '';
+      showLoading(el);
+      try {
+        const data = await API.getMyBookings(status ? { status } : {});
+        const bookings = data.bookings || [];
+        if (!bookings.length) {
+          showEmpty(el, 'No bookings found', 'Try a different filter', `<a href="cars.html" class="btn btn-primary btn-sm" style="margin-top:1rem;">Book a Car</a>`);
+          return;
+        }
+        el.innerHTML = `<div class="table-container">${bookings.map(b => `
+          <div class="booking-row">
+            <img class="booking-thumb" src="${carImageSrc(b.car?.images)}" alt="" onerror="this.src='https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=200&q=60'">
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;">${b.car?.brand || ''} ${b.car?.name || '—'}</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);">${formatDateRange(b.startDate, b.endDate)} · ${b.totalDays} days</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">${b.pickupLocation} → ${b.dropoffLocation}</div>
+            </div>
+            <div style="text-align:right;min-width:90px;">
+              <div style="font-family:var(--font-mono);color:var(--accent);font-weight:700;">${formatCurrency(b.totalAmount)}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">${b.paymentMethod}</div>
+            </div>
+            <div>${statusBadge(b.status)}</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              ${b.status === 'confirmed' ? `<button class="btn btn-danger btn-sm" onclick="openCancel('${b._id}')">Cancel</button>` : ''}
+              ${b.status === 'completed' ? `<button class="btn btn-outline btn-sm" onclick="openReview('${b._id}','${b.car?._id}')">★ Review</button>` : ''}
+              <a href="car-detail.html?id=${b.car?._id}" class="btn btn-ghost btn-sm">View Car</a>
+            </div>
+          </div>
+        `).join('')}</div>`;
+      } catch (err) {
+        Toast.error('Error loading bookings', err.message);
+      }
+    }
+
+    function openCancel(bookingId) {
+      cancellingId = bookingId;
+      document.getElementById('cancelReason').value = '';
+      openModal('cancelModal');
+    }
+
+    async function submitCancel() {
+      const btn = document.getElementById('cancelConfirmBtn');
+      btn.disabled = true;
+      btn.textContent = 'Cancelling...';
+      try {
+        await API.cancelBooking(cancellingId, document.getElementById('cancelReason').value);
+        closeModal('cancelModal');
+        Toast.success('Booking cancelled', 'Your booking has been cancelled and refunded.');
+        loadDashboard();
+      } catch (err) {
+        Toast.error('Failed to cancel', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Cancel Booking';
+      }
+    }
+
+    function openReview(bookingId, carId) {
+      reviewingBooking = { bookingId, carId };
+      selectedRating = 0;
+      updateStars(0);
+      document.getElementById('reviewComment').value = '';
+      openModal('reviewModal');
+    }
+
+    function setRating(val) {
+      selectedRating = val;
+      updateStars(val);
+    }
+
+    function updateStars(val) {
+      document.querySelectorAll('#ratingStars .star').forEach((s, i) => {
+        s.style.color = i < val ? 'var(--accent)' : 'var(--text-muted)';
+      });
+    }
+
+    async function submitReview() {
+      if (!selectedRating) { Toast.warning('Rate the car', 'Please select a star rating'); return; }
+      const comment = document.getElementById('reviewComment').value.trim();
+      if (!comment) { Toast.warning('Add a comment', 'Please write a short review'); return; }
+
+      const btn = document.getElementById('reviewSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+      try {
+        await API.addReview({ carId: reviewingBooking.carId, bookingId: reviewingBooking.bookingId, rating: selectedRating, comment });
+        closeModal('reviewModal');
+        Toast.success('Review submitted!', 'Thank you for your feedback.');
+      } catch (err) {
+        Toast.error('Failed to submit', err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit Review';
+      }
+    }
+
+    async function loadProfile() {
+      try {
+        const data = await API.getMe();
+        const u = data.user;
+        document.getElementById('profileName').value    = u.name || '';
+        document.getElementById('profileEmail').value   = u.email || '';
+        document.getElementById('profilePhone').value   = u.phone || '';
+        document.getElementById('profileLicense').value = u.drivingLicense || '';
+      } catch {}
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await API.put('/auth/profile', {
+          name:           document.getElementById('profileName').value,
+          phone:          document.getElementById('profilePhone').value,
+          drivingLicense: document.getElementById('profileLicense').value,
+        }, true);
+        Toast.success('Profile updated!');
+        const user = Auth.getUser();
+        user.name = document.getElementById('profileName').value;
+        localStorage.setItem('user', JSON.stringify(user));
+        document.getElementById('welcomeName').textContent = user.name.split(' ')[0];
+        document.getElementById('sidebarName').textContent = user.name;
+      } catch (err) { Toast.error('Update failed', err.message); }
+    });
+
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await API.put('/auth/password', {
+          currentPassword: document.getElementById('currentPwd').value,
+          newPassword:     document.getElementById('newPwd').value,
+        }, true);
+        Toast.success('Password updated!');
+        document.getElementById('passwordForm').reset();
+      } catch (err) { Toast.error('Failed', err.message); }
+    });
+
+    // Render rating stars in modal
+    document.getElementById('ratingStars').innerHTML =
+      [1,2,3,4,5].map(i => `<span class="star" data-val="${i}" onclick="setRating(${i})" style="cursor:pointer;color:var(--text-muted);font-size:2rem;">★</span>`).join('');
+
+    loadDashboard();
+  </script>
+</body>
+</html>
